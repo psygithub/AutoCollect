@@ -1,0 +1,30 @@
+# Appium服务器配置
+appium:
+  server_url: "http://127.0.0.1:4723"
+  
+# 设备配置
+device:
+  platform_name: "Android"
+  platform_version: "13.0"  # 根据实际设备版本修改
+  device_name: "Android Device"
+  automation_name: "UiAutomator2"
+  no_reset: true
+  full_reset: false
+  
+# TikTok应用配置
+tiktok:
+  app_package: "com.zhiliaoapp.musically"
+  app_activity: "com.ss.android.ugc.aweme.splash.SplashActivity" # 明确指定启动Activity
+  
+# 微信应用配置
+wechat:
+  app_package: "com.tencent.mm"
+  app_activity: ".ui.SplashUI"  # 使用更可靠的启动Activity
+  
+# 测试配置
+test:
+  implicit_wait: 10
+  screenshot_path: "./screenshots"
+  max_products_to_process: 20 # 默认处理20个商品
+  contact_name: "文件传输助手"  # 要发送消息的微信联系人名称
+  share_target: "file" # 分享目标: "wechat" 或 "file"
