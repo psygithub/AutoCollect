@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动化配置</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        .container { max-width: 600px; margin: auto; padding: 1em; border: 1px solid #ccc; border-radius: 5px; }
+        .form-group { margin-bottom: 1em; }
+        label { display: block; margin-bottom: 0.5em; }
+        input { width: 100%; padding: 0.5em; box-sizing: border-box; }
+        button { padding: 0.7em; cursor: pointer; }
+        #status { margin-top: 1em; padding: 1em; background-color: #f0f0f0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>自动化配置</h1>
+        <form action="/" method="post">
+            <h2>设备配置</h2>
+            <div class="form-group">
+                <label for="platform_version">安卓版本</label>
+                <input type="text" id="platform_version" name="platform_version" value="{{ config.device.platform_version }}">
+            </div>
+            <div class="form-group">
+                <label for="device_name">设备名称 (UDID)</label>
+                <input type="text" id="device_name" name="device_name" value="{{ config.device.device_name }}">
+            </div>
+
+            <h2>TikTok 配置</h2>
+            <div class="form-group">
+                <label for="tiktok_app_package">App Package</label>
+                <input type="text" id="tiktok_app_package" name="tiktok_app_package" value="{{ config.tiktok.app_package }}">
+            </div>
+            <div class="form-group">
+                <label for="tiktok_app_activity">App Activity</label>
+                <input type="text" id="tiktok_app_activity" name="tiktok_app_activity" value="{{ config.tiktok.app_activity }}">
+            </div>
+
+            <h2>测试配置</h2>
+            <div class="form-group">
+                <label for="max_products_to_process">最大处理商品数</label>
+                <input type="number" id="max_products_to_process" name="max_products_to_process" value="{{ config.test.max_products_to_process }}">
+            </div>
+            <div class="form-group">
+                <label for="share_target">分享目标</label>
+                <input type="text" id="share_target" name="share_target" value="{{ config.test.share_target }}" readonly>
+            </div>
+            
+            <button type="submit">保存配置</button>
+        </form>
+
+        <hr style="margin: 2em 0;">
+
+        <h2>控制面板</h2>
+        <button id="start-task-btn">开始任务</button>
+        <a href="/results"><button>查看结果</button></a>
+        <div id="status">状态: 空闲</div>
+    </div>
+
+    <script>
+        document.getElementById('start-task-btn').addEventListener('click', function() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = '状态: 任务正在后台运行...';
+            
+            fetch('/start', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                statusDiv.textContent = '状态: ' + data.message;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusDiv.textContent = '状态: 启动任务时出错。';
+            });
+        });
+    </script>
+</body>
+</html>

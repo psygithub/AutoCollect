@@ -9,3 +9,6 @@ loguru==0.7.2
 pyyaml==6.0.1
 requests
 pyperclip
+Flask==2.2.2
+Werkzeug==2.3.8
+waitress==2.1.2

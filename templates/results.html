@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务结果</title>
+    {% if status == 'running' %}
+    <meta http-equiv="refresh" content="5">
+    {% endif %}
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        .container { max-width: 800px; margin: auto; padding: 1em; border: 1px solid #ccc; border-radius: 5px; }
+        textarea { width: 100%; height: 400px; margin-top: 1em; }
+        a { text-decoration: none; }
+        button { padding: 0.7em; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>任务结果</h1>
+        <p><strong>当前状态:</strong> {{ status }}</p>
+        
+        {% if status == 'running' %}
+        <p>任务正在后台运行，页面将每5秒自动刷新一次...</p>
+        {% endif %}
+
+        <h2>收集到的链接:</h2>
+        <textarea readonly>{% for link in results %}{{ link }}{{ "\n" }}{% endfor %}</textarea>
+        
+        <hr style="margin: 2em 0;">
+        
+        <a href="/"><button>返回配置页面</button></a>
+    </div>
+</body>
+</html>

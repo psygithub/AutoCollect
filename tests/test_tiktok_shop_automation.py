@@ -10,7 +10,6 @@ from loguru import logger
 import os
 import yaml
 import time
-import pyperclip
 from appium.webdriver.common.appiumby import AppiumBy
 
 @pytest.fixture(scope="class")
@@ -97,11 +96,17 @@ class TestTikTokShopAutomation:
                     
                     if tiktok_page.enter_product_detail(product):
                         if tiktok_page.share_product_link():
-                            link = pyperclip.paste()
+                            # 从设备获取剪贴板内容，而不是主机
+                            link = self.driver.get_clipboard_text()
                             if link and link.startswith('http'):
+                                logger.info(f"成功获取到链接: {link}")
                                 if share_service.share_link(link):
                                     shared_links.append(link)
                                     new_links_on_this_scroll += 1
+                                else:
+                                    logger.warning(f"分享链接失败: {link}")
+                            else:
+                                logger.warning(f"从剪贴板获取的链接无效: {link}")
                         
                         self.driver_manager.switch_to_app(self.config['tiktok']['app_package'])
                         tiktok_page.go_back()

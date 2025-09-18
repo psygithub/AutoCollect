@@ -43,13 +43,13 @@ class TikTokPage:
         try:
             logger.info("正在打开TikTok商城...")
             
-            # 增加更长的等待时间以确保应用完全加载
-            logger.info("等待10秒，让应用充分加载...")
-            time.sleep(10)
+            # 增加智能等待以确保应用完全加载
+            logger.info("等待应用加载...")
+            time.sleep(2) # 短暂等待基础UI
             self.helper.handle_popups()
             
             # 点击商城标签
-            if self.helper.click_element_safe(self.shop_tab, timeout=15):
+            if self.helper.click_element_safe(self.shop_tab, timeout=5):
                 logger.info("成功进入TikTok商城")
                 time.sleep(1)
                 return True
@@ -67,7 +67,7 @@ class TikTokPage:
             logger.info("开始图像搜索...")
 
             # 1. 直接点击商城主页的相机图标
-            if not self.helper.click_element_safe(self.camera_button, timeout=15):
+            if not self.helper.click_element_safe(self.camera_button, timeout=5):
                 logger.error("在商城主页未找到相机图标")
                 return False
             
