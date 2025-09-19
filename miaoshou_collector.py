@@ -10,6 +10,10 @@ MIAOSHOU_USERNAME = "18575215654"
 MIAOSHOU_PASSWORD = "599kioKIO!@#"
 # 注意：请将插件路径中的反斜杠 `\` 替换为正斜杠 `/`
 EXTENSION_PATH = "C:/Users/Kan/AppData/Local/Google/Chrome/User Data/Default/UnpackedExtensions/kuajing-erp-plugin-v3_109952_241147546"
+# --- 采集策略开关 ---
+# True: 使用键盘模拟方案 (当前有效方案)
+# False: 使用选择器直接定位方案 (在我们测试中失败，但保留作为备用)
+USE_KEYBOARD_SIMULATION = False
 
 async def collect_links_with_miaoshou(links_to_collect):
     """
@@ -18,16 +22,11 @@ async def collect_links_with_miaoshou(links_to_collect):
     logger.info("开始使用Playwright进行妙手采集...")
     
     async with async_playwright() as p:
-        # 代理服务器配置
-        proxy_settings = {
-            "server": PROXY_SERVER
-        }
+        proxy_settings = { "server": PROXY_SERVER }
         logger.info(f"正在使用代理服务器: {proxy_settings['server']}")
 
-        # 启动一个带有插件和代理的浏览器上下文
-        # headless=False 可以在开发时看到浏览器界面，方便调试
         context = await p.chromium.launch_persistent_context(
-            "",  # 用户数据目录，留空则为临时目录
+            "",
             headless=False,
             args=[
                 f"--disable-extensions-except={EXTENSION_PATH}",
@@ -37,45 +36,33 @@ async def collect_links_with_miaoshou(links_to_collect):
         )
         
         page = await context.new_page()
-        
-        # --- 步骤1: 处理插件初始化和登录妙手 ---
+
+        # --- 步骤1: 处理插件初始化和登录 ---
         try:
-            # 插件可能会打开一个自己的设置页面，需要先处理掉
-            # 等待片刻，让所有初始页面都加载出来
             await page.wait_for_timeout(5000) 
             all_pages = context.pages
             logger.info(f"浏览器启动后有 {len(all_pages)} 个页面。")
             
-            # 遍历所有页面，寻找插件的设置页面并处理
-            for p in all_pages:
-                if p != page: # 排除主页面
+            for p_item in all_pages:
+                if p_item != page:
                     try:
-                        logger.info(f"正在检查页面: {p.url}")
-                        # 尝试在非主页面上执行录制到的关闭弹窗操作
-                        await p.locator("label span").nth(1).click(timeout=5000)
-                        await p.get_by_role("button", name="确认开启").click(timeout=5000)
+                        logger.info(f"正在检查页面: {p_item.url}")
+                        await p_item.locator("label span").nth(1).click(timeout=5000)
+                        await p_item.get_by_role("button", name="确认开启").click(timeout=5000)
                         logger.success("成功处理插件的初始设置页面。")
-                        await p.close()
-                        break # 处理完就退出循环
+                        await p_item.close()
+                        break
                     except Exception:
-                        logger.warning(f"页面 {p.url} 不是插件设置页，或无法执行操作。将忽略。")
+                        logger.warning(f"页面 {p_item.url} 不是插件设置页，或无法执行操作。将忽略。")
 
-            # --- 开始登录 ---
             logger.info(f"正在导航到妙手登录页面: {MIAOSHOU_URL}")
             await page.goto(MIAOSHOU_URL, timeout=60000)
             
-            logger.info("输入账号和密码 (使用录制的新选择器)...")
-            await page.get_by_role("textbox", name="手机号/子账号/邮箱").click()
             await page.get_by_role("textbox", name="手机号/子账号/邮箱").fill(MIAOSHOU_USERNAME)
-            await page.get_by_role("textbox", name="密码").click()
             await page.get_by_role("textbox", name="密码").fill(MIAOSHOU_PASSWORD)
-            
-            logger.info("勾选记住密码并点击登录...")
             await page.locator(".remember-check-box").click()
             await page.get_by_role("button", name="立即登录").click()
 
-            # 等待URL跳转到包含 'welcome' 的页面
-            logger.info("正在等待登录跳转...")
             await page.wait_for_url("**/welcome**", timeout=60000)
             logger.success("妙手网站登录成功！")
             
@@ -89,56 +76,88 @@ async def collect_links_with_miaoshou(links_to_collect):
         for index, link in enumerate(links_to_collect):
             try:
                 logger.info(f"[{index + 1}/{len(links_to_collect)}] 正在打开链接: {link}")
+                await page.add_init_script("""
+                (function() {
+                const orig = Element.prototype.attachShadow;
+                Element.prototype.attachShadow = function(init) {
+                    init = Object.assign({}, init, {mode: 'open'});
+                    return orig.call(this, init);
+                };
+                })();
+                """)
                 await page.goto(link, timeout=60000)
                 
-                # 等待页面加载完成
-                await page.wait_for_load_state("domcontentloaded", timeout=30000)
+                # --- 验证码处理逻辑 ---
+                captcha_present = False
+                for i in range(3):
+                    await page.wait_for_load_state("domcontentloaded", timeout=20000)
+                    captcha_popup = page.get_by_text("Verify to continue:")
+                    if await captcha_popup.is_visible(timeout=3000):
+                        logger.warning(f"检测到 'Verify to continue' 验证码，正在刷新页面... (第 {i + 1}/3 次)")
+                        if i < 2:
+                            await page.reload()
+                        else:
+                            logger.error(f"刷新3次后验证码依然存在，放弃此链接: {link}")
+                            captcha_present = True
+                    else:
+                        logger.info("未检测到验证码弹窗。")
+                        captcha_present = False
+                        break
                 
-                # 根据录制的操作，尝试关闭商品页上可能出现的弹窗
-                try:
-                    # await page.get_by_role("button", name="取消").click(timeout=5000)
-                    logger.info("成功关闭商品页上的'取消'弹窗。")
-                except Exception:
-                    logger.info("商品页上未找到'取消'弹窗，或弹窗已关闭。")
+                if captcha_present:
+                    continue
 
-                time.sleep(3) # 等待插件UI加载
+                time.sleep(3)
 
                 # --- 与插件交互 ---
-                # 这是最不确定的部分，因为插件可能会以多种方式将按钮注入页面
-                # 可能是iframe，也可能是直接的div。您需要在这里进行调试。
-                
-                # TODO: 【请您补充】请在这里填写采集按钮的准确选择器
-                # 您可以使用浏览器的开发者工具(F12)来查找这个按钮的CSS选择器或XPath
-                # 例如: collection_button_selector = "#miaoshou-collect-button"
-                # 根据您的反馈，插件的按钮文本是“采集此商品”
-                # 使用用户提供的 XPath 定位采集按钮
-                collection_button_xpath = "/html/body/rtwcqko-ykzqpmj-mkuzjvsipv//html/body/div/div/div[1]/button/span"
-                logger.info(f"正在使用 XPath 查找采集按钮: {collection_button_xpath}")
-                collect_button = page.locator(f"xpath={collection_button_xpath}")
-                
-                if await collect_button.is_visible(timeout=10000):
-                    await collect_button.click()
-                    logger.success(f"成功点击采集按钮: {link}")
-                    # 等待采集完成
-                    time.sleep(5) 
+                if USE_KEYBOARD_SIMULATION:
+                    # --- 方案A：键盘模拟方案 (当前有效方案) ---
+                    logger.info("尝试键盘模拟方案：聚焦宿主，按 Tab，再按 Enter...")
+                    try:
+                        shadow_host_selector = '[data-wxt-shadow-root]'
+                        shadow_host = page.locator(shadow_host_selector).first
+                        
+                        await shadow_host.focus(timeout=5000)
+                        logger.info("已成功聚焦到 Shadow DOM 宿主元素。")
+                        
+                        await page.keyboard.press("Tab")
+                        logger.info("已按 Tab 键。")
+
+                        await page.keyboard.press("Enter")
+                        logger.success(f"已模拟回车键点击，期望采集已触发: {link}")
+
+                        await page.wait_for_timeout(5000)
+                        logger.info("采集操作已执行，等待5秒。")
+                    except Exception as e:
+                        logger.error(f"键盘模拟操作失败，放弃此链接: {e}")
+                        continue
                 else:
-                    logger.warning(f"在页面上未找到指定的 XPath 采集按钮: {link}")
+                    # --- 方案B：使用选择器直接定位（在我们测试中因插件限制而失败）---
+
+                    button_selector = '[data-wxt-shadow-root] >> button:has-text("采集此商品")'
+                    logger.info(f"尝试选择器定位方案: '{button_selector}'")
+                    try:
+                        collect_button = page.locator(button_selector)
+                        await collect_button.wait_for(state="visible", timeout=5000)
+                        await collect_button.click()
+                        logger.success(f"成功点击采集按钮: {link}")
+                        await page.wait_for_timeout(5000)
+                        logger.info("采集操作已执行，等待5秒。")
+                    except Exception as e:
+                        logger.error(f"使用选择器 '{button_selector}' 点击采集按钮失败，放弃此链接: {e}")
+                        continue
 
             except Exception as e:
                 logger.error(f"处理链接 {link} 时出错: {e}")
-                continue # 继续处理下一个链接
+                continue
 
         logger.info("所有链接处理完毕。")
         await context.close()
 
 # --- 用于直接运行测试的入口 ---
 if __name__ == '__main__':
-    # 提供一些示例链接进行测试
     sample_links = [
         "https://vt.tiktok.com/ZSHnb1eg86vA5-uTrrO/",
         "https://vt.tiktok.com/ZSHnb18VnLuk7-I2bDl/"
-        # ... 您可以添加更多测试链接
     ]
-    
-    # 运行异步函数
     asyncio.run(collect_links_with_miaoshou(sample_links))
