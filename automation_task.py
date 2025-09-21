@@ -1,6 +1,7 @@
 import time
 from loguru import logger
 from appium.webdriver.common.appiumby import AppiumBy
+from datetime import datetime
 
 from pages.tiktok_page import TikTokPage
 from utils.driver_manager import DriverManager
@@ -8,7 +9,7 @@ from utils.share_service import ShareService
 
 def _collect_and_share_links_logic(driver, driver_manager, tiktok_page, share_service, config):
     """Helper function containing the core link collection logic."""
-    max_links = config['test']['max_products_to_process']
+    max_links = config['task']['max_products_to_process']
     shared_links = []
     processed_element_uids = set()
     
@@ -90,21 +91,38 @@ def execute_automation(config):
 
         # Initialize page objects and services
         tiktok_page = TikTokPage(driver)
-        share_service = ShareService(driver_manager, config)
+        
+        # Generate a unique filename with a timestamp for the current task
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        output_filename = f"collected_links_{timestamp}.txt"
+        logger.info(f"本次采集任务将保存到文件: {output_filename}")
+        
+        share_service = ShareService(driver_manager, config, output_filename=output_filename)
         
         # --- Start Process ---
         logger.info("=== 步骤1: 进入TikTok商城 ===")
         if not tiktok_page.open_tiktok_shop():
             raise Exception("进入TikTok商城失败")
+
+        logger.info("=== (可选) 步骤2: 从PC传输图片到设备 ===")
+        pc_image_path = config['task'].get('pc_image_path')
+        # 检查路径是否有效且不是默认占位符
+        if pc_image_path and pc_image_path.strip():
+            logger.info(f"检测到PC端图片路径 '{pc_image_path}'，开始传输...")
+            if not tiktok_page.fetch_image_from_pc(pc_image_path):
+                # 如果提供了路径但传输失败，则应视为严重错误
+                raise Exception(f"从PC传输图片失败: {pc_image_path}")
+        else:
+            logger.info("未提供有效的PC端图片路径，跳过传输步骤。")
         
-        logger.info("=== 步骤2: 开始图像搜索 ===")
+        logger.info("=== 步骤3: 开始图像搜索 ===")
         if not tiktok_page.start_image_search():
             raise Exception("图像搜索失败")
         
-        logger.info("=== 步骤3: 收集并分享商品链接 ===")
+        logger.info("=== 步骤4: 收集并分享商品链接 ===")
         shared_links = _collect_and_share_links_logic(driver, driver_manager, tiktok_page, share_service, config)
         
-        logger.info("=== 步骤4: 验证结果 ===")
+        logger.info("=== 步骤5: 验证结果 ===")
         if not shared_links:
             logger.warning("未能成功分享任何链接。")
         else:
@@ -114,9 +132,10 @@ def execute_automation(config):
 
     except Exception as e:
         logger.error(f"自动化任务执行期间发生意外错误: {e}")
-        if driver_manager:
+        # Only take a screenshot if the driver was successfully initialized
+        if driver_manager and driver_manager.driver:
             driver_manager.take_screenshot("task_error.png")
-        return [] # Return empty list on failure
+        return None # Return None on failure
     finally:
         if driver_manager:
             driver_manager.quit_driver()

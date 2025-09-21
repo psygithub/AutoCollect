@@ -3,80 +3,330 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自动化配置</title>
+    <title>自动化采集配置</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 2em; }
-        .container { max-width: 600px; margin: auto; padding: 1em; border: 1px solid #ccc; border-radius: 5px; }
-        .form-group { margin-bottom: 1em; }
-        label { display: block; margin-bottom: 0.5em; }
-        input { width: 100%; padding: 0.5em; box-sizing: border-box; }
-        button { padding: 0.7em; cursor: pointer; }
-        #status { margin-top: 1em; padding: 1em; background-color: #f0f0f0; border-radius: 5px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 2em;
+            background-color: #f4f7f9;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 1.5em;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5em 2em;
+            margin-bottom: 2em;
+        }
+        .card h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 0.5em;
+            color: #34495e;
+        }
+        .form-group {
+            margin-bottom: 1.2em;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.8em;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            padding: 0.8em 1.5em;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 1em;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #3498db;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary {
+            background-color: #2ecc71;
+        }
+        .btn-secondary:hover {
+            background-color: #27ae60;
+        }
+        .btn-group {
+            display: inline-flex;
+            gap: 1em;
+        }
+        #status {
+            margin-top: 1em;
+            padding: 1em;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5em;
+        }
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>自动化配置</h1>
-        <form action="/" method="post">
-            <h2>设备配置</h2>
-            <div class="form-group">
-                <label for="platform_version">安卓版本</label>
-                <input type="text" id="platform_version" name="platform_version" value="{{ config.device.platform_version }}">
-            </div>
-            <div class="form-group">
-                <label for="device_name">设备名称 (UDID)</label>
-                <input type="text" id="device_name" name="device_name" value="{{ config.device.device_name }}">
-            </div>
+        <h1>自动化采集配置</h1>
 
-            <h2>TikTok 配置</h2>
-            <div class="form-group">
-                <label for="tiktok_app_package">App Package</label>
-                <input type="text" id="tiktok_app_package" name="tiktok_app_package" value="{{ config.tiktok.app_package }}">
-            </div>
-            <div class="form-group">
-                <label for="tiktok_app_activity">App Activity</label>
-                <input type="text" id="tiktok_app_activity" name="tiktok_app_activity" value="{{ config.tiktok.app_activity }}">
-            </div>
+        <!-- 技术配置 (可折叠) -->
+        <details class="card">
+            <summary>
+                <h2>技术配置</h2>
+            </summary>
+            <form id="tech-config-form" style="margin-top: 1.5em;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="platform_version">安卓版本</label>
+                        <input type="text" id="platform_version" name="platform_version" value="{{ config.device.platform_version }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="device_name">设备名称 (UDID)</label>
+                        <input type="text" id="device_name" name="device_name" value="{{ config.device.device_name }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="tiktok_app_package">App Package</label>
+                        <input type="text" id="tiktok_app_package" name="tiktok_app_package" value="{{ config.tiktok.app_package }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="tiktok_app_activity">App Activity</label>
+                        <input type="text" id="tiktok_app_activity" name="tiktok_app_activity" value="{{ config.tiktok.app_activity }}">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">保存技术配置</button>
+                </div>
+            </form>
+        </details>
 
-            <h2>测试配置</h2>
-            <div class="form-group">
-                <label for="max_products_to_process">最大处理商品数</label>
-                <input type="number" id="max_products_to_process" name="max_products_to_process" value="{{ config.test.max_products_to_process }}">
-            </div>
-            <div class="form-group">
-                <label for="share_target">分享目标</label>
-                <input type="text" id="share_target" name="share_target" value="{{ config.test.share_target }}" readonly>
-            </div>
-            
-            <button type="submit">保存配置</button>
-        </form>
+        <!-- 任务配置 -->
+        <div class="card">
+            <form id="task-config-form">
+                <h2>任务配置</h2>
+                <div class="form-group">
+                    <label for="pc_image_path">采集产品图 (可选，放到uploads文件夹下)</label>
+                    <select id="pc_image_path" name="pc_image_path">
+                        <option value="">-- 不使用图片搜索 --</option>
+                    </select>
+                    <img id="image-preview" src="" alt="图片预览" style="max-width: 150px; margin-top: 1em; display: none; border-radius: 4px;">
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="max_products_to_process">采集数</label>
+                        <input type="number" id="max_products_to_process" name="max_products_to_process" value="{{ config.task.max_products_to_process }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="share_target">分享目标</label>
+                        <input type="text" id="share_target" name="share_target" value="{{ config.task.share_target }}" readonly>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <div class="btn-group">
+                        <button type="submit" class="btn-primary">保存任务配置</button>
+                        <button type="button" id="start-task-btn" class="btn-secondary">开始采集</button>
+                    </div>
+                </div>
+            </form>
+        </div>
 
-        <hr style="margin: 2em 0;">
-
-        <h2>控制面板</h2>
-        <button id="start-task-btn">开始任务</button>
-        <a href="/results"><button>查看结果</button></a>
-        <div id="status">状态: 空闲</div>
+        <!-- 控制面板 -->
+        <div class="card">
+            <h2>控制面板</h2>
+            <div class="form-group">
+                <label for="link-file-select">采集的链接：</label>
+                <div class="link-opener-group">
+                    <select id="link-file-select"></select>
+                    <div class="btn-group">
+                        <a href="/results" id="view-links-link" target="_blank"><button type="button" class="btn-secondary">查看链接</button></a>
+                        <button type="button" id="open-links-btn" class="btn-primary btn-orange">打开链接</button>
+                    </div>
+                </div>
+            </div>
+            <div id="status">状态: 空闲</div>
+        </div>
     </div>
 
     <script>
-        document.getElementById('start-task-btn').addEventListener('click', function() {
+        document.addEventListener('DOMContentLoaded', function() {
             const statusDiv = document.getElementById('status');
-            statusDiv.textContent = '状态: 任务正在后台运行...';
-            
-            fetch('/start', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                statusDiv.textContent = '状态: ' + data.message;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                statusDiv.textContent = '状态: 启动任务时出错。';
+
+            // --- 图片选择与预览 ---
+            const imageSelect = document.getElementById('pc_image_path');
+            const imagePreview = document.getElementById('image-preview');
+            const currentImagePath = "{{ config.task.pc_image_path or '' }}";
+
+            function updatePreview(imageName) {
+                if (imageName) {
+                    // Add a timestamp to the URL to bypass browser cache
+                    imagePreview.src = '/uploads/' + imageName + '?t=' + new Date().getTime();
+                    imagePreview.style.display = 'block';
+                } else {
+                    imagePreview.src = '';
+                    imagePreview.style.display = 'none';
+                }
+            }
+
+            imageSelect.addEventListener('change', () => updatePreview(imageSelect.value));
+
+            fetch('/api/images')
+                .then(response => response.json())
+                .then(images => {
+                    if (Array.isArray(images)) {
+                        images.forEach(image => {
+                            const option = new Option(image, image);
+                            if (currentImagePath.endsWith(image)) {
+                                option.selected = true;
+                            }
+                            imageSelect.add(option);
+                        });
+                        if (imageSelect.value) updatePreview(imageSelect.value);
+                    }
+                });
+
+            // --- 链接文件选择 ---
+            const linkFileSelect = document.getElementById('link-file-select');
+            fetch('/api/link_files')
+                .then(response => response.json())
+                .then(files => {
+                    if (Array.isArray(files) && files.length > 0) {
+                        files.forEach(file => {
+                            linkFileSelect.add(new Option(file, file));
+                        });
+                    } else {
+                        linkFileSelect.add(new Option("无可用链接文件", ""));
+                        linkFileSelect.disabled = true;
+                        document.getElementById('open-links-btn').disabled = true;
+                    }
+                });
+
+            // --- 表单提交 ---
+            const techForm = document.getElementById('tech-config-form');
+            techForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                statusDiv.textContent = '正在保存技术配置...';
+                fetch('/save_tech_config', { method: 'POST', body: new FormData(this) })
+                    .then(res => res.json()).then(data => statusDiv.textContent = `状态: ${data.message}`)
+                    .catch(err => statusDiv.textContent = '状态: 保存技术配置时出错。');
+            });
+
+            const taskForm = document.getElementById('task-config-form');
+            taskForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                statusDiv.textContent = '正在保存任务配置...';
+                fetch('/save_task_config', { method: 'POST', body: new FormData(this) })
+                    .then(res => res.json()).then(data => statusDiv.textContent = `状态: ${data.message}`)
+                    .catch(err => statusDiv.textContent = '状态: 保存任务配置时出错。');
+            });
+
+            // --- 控制面板按钮 ---
+            document.getElementById('start-task-btn').addEventListener('click', function() {
+                statusDiv.textContent = '正在保存任务配置并准备开始...';
+                // First, save the task config
+                fetch('/save_task_config', { method: 'POST', body: new FormData(taskForm) })
+                    .then(res => res.json())
+                    .then(saveData => {
+                        if (saveData.status === 'success') {
+                            statusDiv.textContent = '配置已保存，正在启动采集任务...';
+                            // Then, start the task
+                            return fetch('/start', { method: 'POST' });
+                        } else {
+                            throw new Error('保存任务配置失败。');
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(startData => {
+                        statusDiv.textContent = `状态: ${startData.message}`;
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        statusDiv.textContent = '状态: 启动采集任务时出错。';
+                    });
+            });
+
+            document.getElementById('open-links-btn').addEventListener('click', function() {
+                const selectedFile = linkFileSelect.value;
+                if (!selectedFile) {
+                    statusDiv.textContent = '状态: 请先选择一个链接文件。';
+                    return;
+                }
+                statusDiv.textContent = `状态: 正在启动浏览器打开 ${selectedFile}...`;
+                fetch('/open_links', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: selectedFile })
+                })
+                .then(res => res.json()).then(data => statusDiv.textContent = `状态: ${data.message}`)
+                .catch(err => statusDiv.textContent = '状态: 启动打开链接任务时出错。');
             });
         });
     </script>
+    <style>
+        /* Additional styles for the new layout */
+        summary {
+            cursor: pointer;
+            outline: none;
+        }
+        summary h2 {
+            display: inline-block;
+            margin: 0;
+            border: none;
+        }
+        .link-opener-group {
+            display: flex;
+            gap: 1em;
+            align-items: center;
+        }
+        .link-opener-group select {
+            flex-grow: 1;
+        }
+        .link-opener-group .btn-group {
+            flex-shrink: 0;
+        }
+        .btn-orange {
+            background-color: #e67e22;
+        }
+        .btn-orange:hover {
+            background-color: #d35400;
+        }
+        .form-actions {
+            text-align: right;
+            margin-top: 1.5em;
+        }
+    </style>
 </body>
 </html>

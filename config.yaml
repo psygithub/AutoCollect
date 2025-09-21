@@ -1,30 +1,22 @@
-# Appium服务器配置
 appium:
-  server_url: "http://127.0.0.1:4723"
-  
-# 设备配置
+  server_url: http://127.0.0.1:4723
 device:
-  platform_name: "Android"
-  platform_version: "13"  # 根据实际设备版本修改  13
-  device_name: "Android Device"  # emulator-5554"  # Android Device
-  automation_name: "UiAutomator2"
-  no_reset: true
+  automation_name: UiAutomator2
+  device_name: RFCR70SBAQA
   full_reset: false
-  
-# TikTok应用配置
-tiktok:
-  app_package: "com.zhiliaoapp.musically"
-  app_activity: "com.ss.android.ugc.aweme.splash.SplashActivity" # 明确指定启动Activity
-  
-# 微信应用配置
-wechat:
-  app_package: "com.tencent.mm"
-  app_activity: ".ui.SplashUI"  # 使用更可靠的启动Activity
-  
-# 测试配置
-test:
+  no_reset: true
+  platform_name: Android
+  platform_version: '13'
+task:
+  contact_name: 文件传输助手
   implicit_wait: 3
-  screenshot_path: "./screenshots"
-  max_products_to_process: 2 # 默认处理20个商品
-  contact_name: "文件传输助手"  # 要发送消息的微信联系人名称
-  share_target: "file" # 分享目标: "wechat" 或 "file"
+  max_products_to_process: 2
+  pc_image_path: D:\projects\AutoCollect\uploads\EEA05-A006-150-WH1-001.jpg
+  screenshot_path: ./screenshots
+  share_target: file
+tiktok:
+  app_activity: com.ss.android.ugc.aweme.splash.SplashActivity
+  app_package: com.zhiliaoapp.musically
+wechat:
+  app_activity: .ui.SplashUI
+  app_package: com.tencent.mm

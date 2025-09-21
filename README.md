@@ -39,8 +39,8 @@ AutoCollectItem/
 
 ### 系统要求
 - Windows 10/11 或 macOS 或 Linux
-- Python 3.8+
-- Node.js 14+
+- Python 3.11.6
+- Node.js 23+
 - Android SDK
 - 已连接的Android设备或模拟器
 

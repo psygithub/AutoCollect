@@ -24,7 +24,8 @@ class DriverManager:
             logger.info(f"使用配置创建驱动: {self.config['device']}")
             options = UiAutomator2Options()
             options.platform_name = self.config['device']['platform_name']
-            options.platform_version = self.config['device']['platform_version']
+            # Force platformVersion to be a string, which is a common Appium requirement
+            options.platform_version = str(self.config['device']['platform_version'])
             options.device_name = self.config['device']['device_name']
             options.automation_name = self.config['device']['automation_name']
             options.no_reset = self.config['device']['no_reset']
@@ -35,7 +36,7 @@ class DriverManager:
             options.app_activity = self.config['tiktok']['app_activity']
             
             # 设置隐式等待
-            options.implicit_wait = self.config['test']['implicit_wait']
+            options.implicit_wait = self.config['task']['implicit_wait']
             
             self.driver = webdriver.Remote(
                 self.config['appium']['server_url'],
@@ -47,7 +48,14 @@ class DriverManager:
             
         except Exception as e:
             logger.error(f"创建Appium驱动失败: {e}")
-            raise
+            logger.error("--- Appium连接失败排查指引 ---")
+            logger.error("1. 请确认您的Appium Server是否已经启动。")
+            logger.error("2. 请检查您的安卓设备是否已通过USB连接，并已开启'开发者模式'和'USB调试'。")
+            logger.error("3. 请确认Web界面上配置的'设备名称 (UDID)'与您通过`adb devices`命令查看到的设备ID完全一致。")
+            logger.error("4. 请确认Web界面上配置的'安卓版本'与您设备的系统版本一致。")
+            logger.error(f"5. 请检查Appium Server的地址配置是否正确: {self.config['appium']['server_url']}")
+            self.driver = None # Ensure driver is None on failure
+            return None
     
     def quit_driver(self):
         """退出驱动"""
@@ -89,7 +97,7 @@ class DriverManager:
             import time
             filename = f"screenshot_{int(time.time())}.png"
         
-        screenshot_dir = self.config['test']['screenshot_path']
+        screenshot_dir = self.config['task']['screenshot_path']
         os.makedirs(screenshot_dir, exist_ok=True)
         
         filepath = os.path.join(screenshot_dir, filename)

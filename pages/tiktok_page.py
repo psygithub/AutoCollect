@@ -4,6 +4,7 @@ from utils.element_helper import ElementHelper
 from loguru import logger
 import time
 import pyperclip
+import os
 
 
 class TikTokPage:
@@ -37,6 +38,26 @@ class TikTokPage:
 
         best_sell_product_xpath='//com.lynx.tasm.behavior.ui.view.UIView[@content-desc="畅销商品"]'
         self.best_sell_product = (AppiumBy.XPATH, best_sell_product_xpath)
+
+    def fetch_image_from_pc(self, pc_image_path):
+        """从PC传输图片到手机设备"""
+        try:
+            if not os.path.exists(pc_image_path):
+                logger.error(f"PC端图片路径不存在: {pc_image_path}")
+                return False
+            
+            device_path = "/sdcard/Download/tiktok_search_image.png"
+            logger.info(f"正在将图片 '{pc_image_path}' 传输到设备的 '{device_path}'...")
+            
+            self.driver.push_file(device_path, source_path=pc_image_path)
+            
+            logger.success(f"图片成功传输到 {device_path}")
+            # 短暂等待，确保文件系统刷新，图片在相册中可见
+            time.sleep(3)
+            return True
+        except Exception as e:
+            logger.error(f"从PC传输图片失败: {e}")
+            return False
 
     def open_tiktok_shop(self):
         """打开TikTok商城"""
