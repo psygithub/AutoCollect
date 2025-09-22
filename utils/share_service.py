@@ -61,17 +61,17 @@ class ShareService:
     def _save_to_file(self, link):
         """
         私有方法：将链接保存到本地文件。
+        每次调用都会生成一个带时间戳的新文件。
         """
         try:
             links_dir = 'shared_links'
             os.makedirs(links_dir, exist_ok=True)
-            
-            # 如果没有在初始化时指定文件名，则使用默认文件名
-            if not self.output_filename:
-                self.output_filename = 'collected_links.txt'
-                
-            file_path = os.path.join(links_dir, self.output_filename)
-            
+
+            # 生成带时间戳的文件名
+            timestamp = datetime.now().strftime("%m%d%H%M%S")
+            filename = f"links-{timestamp}.txt"
+            file_path = os.path.join(links_dir, filename)
+
             with open(file_path, 'a', encoding='utf-8') as f:
                 f.write(f"{link}\n")
             

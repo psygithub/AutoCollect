@@ -164,7 +164,7 @@
             </form>
         </div>
 
-        <!-- 控制面板 -->
+            <!-- 控制面板 -->
         <div class="card">
             <h2>控制面板</h2>
             <div class="form-group">
@@ -241,19 +241,45 @@
 
             // --- 链接文件选择 ---
             const linkFileSelect = document.getElementById('link-file-select');
-            fetch('/api/link_files')
-                .then(response => response.json())
-                .then(files => {
-                    if (Array.isArray(files) && files.length > 0) {
-                        files.forEach(file => {
-                            linkFileSelect.add(new Option(file, file));
-                        });
-                    } else {
-                        linkFileSelect.add(new Option("无可用链接文件", ""));
+            const openLinksBtn = document.getElementById('open-links-btn');
+
+            function fetchAndPopulateLinkFiles() {
+                const previouslySelected = linkFileSelect.value;
+                fetch('/api/link_files')
+                    .then(response => response.json())
+                    .then(files => {
+                        // Clear existing options
+                        linkFileSelect.innerHTML = '';
+
+                        if (Array.isArray(files) && files.length > 0) {
+                            files.forEach(file => {
+                                const option = new Option(file, file);
+                                linkFileSelect.add(option);
+                            });
+                            // Re-select previous value if it still exists
+                            if (previouslySelected && files.includes(previouslySelected)) {
+                                linkFileSelect.value = previouslySelected;
+                            }
+                            linkFileSelect.disabled = false;
+                            openLinksBtn.disabled = false;
+                        } else {
+                            linkFileSelect.add(new Option("无可用链接文件", ""));
+                            linkFileSelect.disabled = true;
+                            openLinksBtn.disabled = true;
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Failed to refresh link files:", err);
                         linkFileSelect.disabled = true;
-                        document.getElementById('open-links-btn').disabled = true;
-                    }
-                });
+                        openLinksBtn.disabled = true;
+                    });
+            }
+
+            // Initial fetch
+            fetchAndPopulateLinkFiles();
+
+            // Set up interval to refresh every 10 seconds
+            setInterval(fetchAndPopulateLinkFiles, 10000);
 
             // --- 表单提交 ---
             const mobileForm = document.getElementById('mobile-config-form');

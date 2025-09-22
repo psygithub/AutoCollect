@@ -60,7 +60,7 @@ def run_automation_task_wrapper(pc_image_path):
     try:
         config = load_config()
         # Dynamically set the pc_image_path for this run
-        config['task']['pc_image_path'] = pc_image_path
+        # config['task']['pc_image_path'] = pc_image_path
         
         results = execute_automation(config)
         if results is None: # Check for failure signal
@@ -77,12 +77,25 @@ def run_automation_task_wrapper(pc_image_path):
 # --- Routes ---
 @app.route('/', methods=['GET'])
 def index():
-    """Main page to display configuration."""
+    """Main page to display configuration and list of link files."""
     config = load_config()
     # Ensure the image path uses forward slashes for JavaScript compatibility
     if config.get('task', {}).get('pc_image_path'):
         config['task']['pc_image_path'] = config['task']['pc_image_path'].replace('\\', '/')
-    return render_template('index.html', config=config)
+
+    # List and sort link files
+    links_dir = 'shared_links'
+    link_files = []
+    if os.path.exists(links_dir):
+        try:
+            # Get all .txt files and sort them descending by name (which includes the timestamp)
+            files = [f for f in os.listdir(links_dir) if f.startswith('links-') and f.endswith('.txt')]
+            files.sort(reverse=True)
+            link_files = files
+        except Exception as e:
+            logger.error(f"Error reading or sorting link files: {e}")
+
+    return render_template('index.html', config=config, link_files=link_files)
 
 @app.route('/api/images')
 def list_images():
@@ -110,14 +123,12 @@ def start_task():
         return jsonify({"status": "error", "message": "Task is already running."}), 400
 
     # Get the selected image from the request
+    image_path=None
     selected_image = request.json.get('pc_image_path')
     if not selected_image:
-        return jsonify({"status": "error", "message": "No image selected."}), 400
-    
-    # Construct the full, absolute path for the image
-    image_path = os.path.abspath(os.path.join(app.config['IMAGE_FOLDER'], selected_image))
-
-    logger.info(f"Received request to start automation task with image: {image_path}")
+        # Construct the full, absolute path for the image
+        image_path = os.path.abspath(os.path.join(app.config['IMAGE_FOLDER'], selected_image))
+        logger.info(f"Received request to start automation task with image: {image_path}")
     
     # Pass the dynamic image path to the task wrapper
     task_thread = threading.Thread(target=run_automation_task_wrapper, args=(image_path,))
@@ -161,9 +172,9 @@ def list_link_files():
         if not os.path.exists(links_dir):
             return jsonify([])
         
-        files = [f for f in os.listdir(links_dir) if f.endswith('.txt')]
-        # Sort files by modification time, descending
-        files.sort(key=lambda f: os.path.getmtime(os.path.join(links_dir, f)), reverse=True)
+        # Get all .txt files starting with links- and sort them descending by name
+        files = [f for f in os.listdir(links_dir) if f.startswith('links-') and f.endswith('.txt')]
+        files.sort(reverse=True)
         
         return jsonify(files)
     except Exception as e:

@@ -35,7 +35,7 @@ class ElementHelper:
             logger.warning(f"未找到元素列表 {locator}: {e}")
             return []
     
-    def click_element_safe(self, locator, timeout=10):
+    def click_element_safe(self, locator, timeout=3):
         """安全点击元素"""
         try:
             # 使用传入的timeout，而不是self.wait的默认值

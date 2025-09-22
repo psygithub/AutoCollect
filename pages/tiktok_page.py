@@ -10,34 +10,42 @@ import os
 class TikTokPage:
     """TikTok页面操作类"""
     
-    def __init__(self, driver):
-        self.driver = driver
-        self.helper = ElementHelper(driver)
-        
+    def __init__(self, driver_manager):
+        self.driver_manager = driver_manager
+        self.driver = driver_manager.driver
+        self.helper = ElementHelper(self.driver)
+
         # === 页面元素定位器 (已根据最终流程更新) ===
 
         shop_xpath='//android.widget.TextView[@resource-id="android:id/text1" and @text="商城"] | //android.widget.TextView[@resource-id="com.zhiliaoapp.musically:id/title" and (@text="商城" or @text="Shop")]'
         self.shop_tab = (AppiumBy.XPATH, shop_xpath)
         # 使用XPath定位搜索框和相机图标的组合，更加健壮
         self.search_button = (AppiumBy.XPATH, "//*[contains(@text, '搜索') or contains(@content-desc, '搜索')]/../*[contains(@class, 'ImageView')]")
-        camera_xapth='//androidx.recyclerview.widget.RecyclerView[@resource-id="com.zhiliaoapp.musically:id/hz0"]/android.widget.FrameLayout/android.widget.FrameLayout/com.ss.android.ugc.aweme.ecommerce.ui.EcomFlattenUIImage[2]'
+        camera_xapth='//androidx.recyclerview.widget.RecyclerView[starts-with(@resource-id,"com.zhiliaoapp.musically:id/")]/android.widget.FrameLayout/android.widget.FrameLayout/com.ss.android.ugc.aweme.ecommerce.ui.EcomFlattenUIImage[2]'
         self.camera_button = (AppiumBy.XPATH, camera_xapth)
+
         upload_photo_btn_xpath='//android.widget.ImageView[@content-desc="图片"]'
         self.upload_photo_button = (AppiumBy.XPATH, upload_photo_btn_xpath)
-        take_photoe_xpath='(//android.widget.ImageView[@resource-id="com.zhiliaoapp.musically:id/f4n"])[1]'
-        self.take_photo_button = (AppiumBy.XPATH, take_photoe_xpath)
+
+        # take_photo_xpath='(//android.widget.ImageView[@resource-id="com.zhiliaoapp.musically:id/f9_"])[1]'
+        take_photo_xpath='//android.widget.GridView[starts-with(@resource-id,"com.zhiliaoapp.musically:id/")]/android.view.ViewGroup[1]'
+        self.take_photo_button = (AppiumBy.XPATH, take_photo_xpath)
         # self.confirm_photo_button = (AppiumBy.XPATH, "//android.widget.TextView[@text='确定' or @text='OK']")
         
-        # 更通用的XPath，匹配所有产品项
-        product_items_xpath='//android.widget.FrameLayout[@resource-id="com.zhiliaoapp.musically:id/g8d"]/android.widget.FrameLayout/android.widget.FrameLayout/com.lynx.tasm.behavior.ui.view.UIComponent'
-        self.product_items = (AppiumBy.XPATH, product_items_xpath)
-        share_btn_xpath='//android.view.ViewGroup[@resource-id="com.zhiliaoapp.musically:id/rg8"]'
-        self.share_button = (AppiumBy.XPATH, share_btn_xpath)
-        copy_link_btn_xpath='(//android.widget.ImageView[@resource-id="com.zhiliaoapp.musically:id/rfq"])[1] | //android.widget.TextView[@text="复制链接" or @text="Copy Link"]'
-        self.copy_link_option = (AppiumBy.XPATH, copy_link_btn_xpath)
-
         best_sell_product_xpath='//com.lynx.tasm.behavior.ui.view.UIView[@content-desc="畅销商品"]'
         self.best_sell_product = (AppiumBy.XPATH, best_sell_product_xpath)
+
+        # 更通用的XPath，匹配所有产品项
+        product_items_xpath='//android.widget.FrameLayout[starts-with(@resource-id,"com.zhiliaoapp.musically:id/")]/android.widget.FrameLayout/android.widget.FrameLayout/com.lynx.tasm.behavior.ui.view.UIComponent'
+        self.product_items = (AppiumBy.XPATH, product_items_xpath)
+
+        # share_btn_xpath='//android.view.ViewGroup[starts-with(@resource-id,"com.zhiliaoapp.musically:id/")]'
+        share_btn_xpath='//android.widget.ImageView[@content-desc="分享"]'
+        self.share_button = (AppiumBy.XPATH, share_btn_xpath)
+                              
+        copy_link_btn_xpath='//android.widget.TextView[contains(@text,"复制链接")]'
+        self.copy_link_option = (AppiumBy.XPATH, copy_link_btn_xpath)
+
 
     def fetch_image_from_pc(self, pc_image_path):
         """从PC传输图片到手机设备"""
@@ -67,7 +75,7 @@ class TikTokPage:
             # 增加智能等待以确保应用完全加载
             logger.info("等待应用加载...")
             time.sleep(2) # 短暂等待基础UI
-            self.helper.handle_popups()
+            # self.helper.handle_popups()
             
             # 点击商城标签
             if self.helper.click_element_safe(self.shop_tab, timeout=5):
@@ -95,10 +103,10 @@ class TikTokPage:
             logger.info("成功点击相机图标，进入相册")
             time.sleep(2) # 等待相册加载
             
-            # 2. 选择相册中的第一张图片
-            if not self.helper.click_element_safe(self.upload_photo_button):
-                logger.error("在相册中未找到任何图片")
-                return False
+            # # 2. 点击上传按钮
+            # if not self.helper.click_element_safe(self.upload_photo_button):
+            #     logger.error("在相册中未找到上传按钮")
+            #     return False
             
 
             # 2. 选择相册中的第一张图片
@@ -126,15 +134,15 @@ class TikTokPage:
             time.sleep(2)
                 
 
-            # 查找商品元素
-            products = self.helper.find_elements_safe(self.product_items, timeout=10)
+            # # 查找商品元素
+            # products = self.helper.find_elements_safe(self.product_items, timeout=10)
             
-            if products:
-                logger.info(f"找到 {len(products)} 个商品")
-                return products
-            else:
-                logger.warning("未找到商品列表")
-                return []
+            # if products:
+            #     logger.info(f"找到 {len(products)} 个商品")
+            #     return products
+            # else:
+            #     logger.warning("未找到商品列表")
+            #     return []
                 
         except Exception as e:
             logger.error(f"获取商品列表失败: {e}")
@@ -144,7 +152,8 @@ class TikTokPage:
         """进入商品详情页"""
         try:
             logger.info("进入商品详情页...")
-            product_element.click()
+            self.helper.click_element_safe(product_element, timeout=5)
+            # product_element.click()
             time.sleep(2)
             return True
         except Exception as e:
@@ -264,3 +273,77 @@ class TikTokPage:
             logger.info(f"总共收集到 {len(collected_links)} 个链接。")
             
         return collected_links
+
+
+    def collect_and_share_links(self, share_service,config):
+        max_links = config['task']['max_products_to_process']
+        shared_links = []
+        processed_element_uids = set()
+        
+        base_xpath = '//android.widget.FrameLayout[starts-with(@resource-id,"com.zhiliaoapp.musically:id/")]/android.widget.FrameLayout/android.widget.FrameLayout/com.lynx.tasm.behavior.ui.view.UIComponent'
+        
+        # 临时测试
+        elements = self.driver.find_elements(
+        By.XPATH,
+        '//android.widget.FrameLayout[starts-with(@resource-id,"com.zhiliaoapp.musically:id/")]/android.widget.FrameLayout/android.widget.FrameLayout/com.lynx.tasm.behavior.ui.view.UIComponent')
+        
+        logger.info(f"找到 {len(elements)} 个元素")
+        # for el in elements:
+        #     print(el)  # 打印文本
+        #     print(el.get_attribute("resourceId"))  # 打印属性
+
+
+
+        while len(shared_links) < max_links:
+            new_links_on_this_scroll = 0
+            for i in range(5, 9):
+                if len(shared_links) >= max_links:
+                    break
+                
+                product_xpath = f"{base_xpath}[{i}]"
+                product = self.helper.find_element_safe((AppiumBy.XPATH, product_xpath), timeout=5)
+                
+                if not product:
+                    continue
+                logger.info(f"找到商品: {product}")  
+                logger.info(f"商品XPATH: {product_xpath}")        
+                try:
+                    uid = (product.location['x'], product.location['y'], product.size['width'], product.size['height'])
+                    if uid in processed_element_uids:
+                        continue
+                    
+                    processed_element_uids.add(uid)
+                    
+                    if self.enter_product_detail(product):
+                        if self.share_product_link():
+                            # 从设备获取剪贴板内容，而不是主机
+                            link = self.driver.get_clipboard_text()
+                            if link and link.startswith('http'):
+                                logger.info(f"成功获取到链接: {link}")
+                                if share_service.share_link(link):
+                                    shared_links.append(link)
+                                    new_links_on_this_scroll += 1
+                                else:
+                                    logger.warning(f"分享链接失败: {link}")
+                            else:
+                                logger.warning(f"从剪贴板获取的链接无效: {link}")
+                        
+                        self.driver_manager.switch_to_app(config['tiktok']['app_package'])
+                        self.go_back()
+
+                except Exception as e:
+                    logger.error(f"处理索引 {i} 的产品时出错: {e}")
+                    self.driver_manager.switch_to_app(config['tiktok']['app_package'])
+                    self.go_back()
+
+            if len(shared_links) >= max_links:
+                break
+
+            if new_links_on_this_scroll == 0:
+                logger.info("在当前页面未发现任何新产品，认为已到达列表底部。")
+                break
+            
+            self.helper.swipe_up()
+            time.sleep(3)
+            
+        return shared_links
