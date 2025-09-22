@@ -50,7 +50,7 @@ def run_link_opener_task_wrapper(filename):
         logger.error(f"Link opener task for {filename} failed in wrapper: {e}")
 
 # --- Automation Task ---
-def run_automation_task_wrapper():
+def run_automation_task_wrapper(pc_image_path):
     """Wrapper to run the task and update state."""
     global task_state
     task_state['status'] = 'running'
@@ -59,6 +59,9 @@ def run_automation_task_wrapper():
     
     try:
         config = load_config()
+        # Dynamically set the pc_image_path for this run
+        config['task']['pc_image_path'] = pc_image_path
+        
         results = execute_automation(config)
         if results is None: # Check for failure signal
              task_state['status'] = 'failed'
@@ -106,9 +109,20 @@ def start_task():
     if task_state['status'] == 'running':
         return jsonify({"status": "error", "message": "Task is already running."}), 400
 
-    logger.info("Received request to start automation task.")
-    task_thread = threading.Thread(target=run_automation_task_wrapper)
+    # Get the selected image from the request
+    selected_image = request.json.get('pc_image_path')
+    if not selected_image:
+        return jsonify({"status": "error", "message": "No image selected."}), 400
+    
+    # Construct the full, absolute path for the image
+    image_path = os.path.abspath(os.path.join(app.config['IMAGE_FOLDER'], selected_image))
+
+    logger.info(f"Received request to start automation task with image: {image_path}")
+    
+    # Pass the dynamic image path to the task wrapper
+    task_thread = threading.Thread(target=run_automation_task_wrapper, args=(image_path,))
     task_thread.start()
+    
     return jsonify({"status": "success", "message": "Automation task started in the background."})
 
 @app.route('/save_task_config', methods=['POST'])
@@ -118,20 +132,16 @@ def save_task_config():
     
     config['task']['max_products_to_process'] = int(request.form['max_products_to_process'])
     
-    selected_image = request.form.get('pc_image_path')
-    if selected_image:
-        image_path = os.path.abspath(os.path.join(app.config['IMAGE_FOLDER'], selected_image))
-        config['task']['pc_image_path'] = image_path
-    else:
-        config['task']['pc_image_path'] = ""
-        
+    # The pc_image_path is no longer saved to config
+    # It's now provided dynamically when the task starts
+    
     save_config(config)
     logger.success("Task configuration saved.")
     return jsonify({"status": "success", "message": "任务配置已保存。"})
 
-@app.route('/save_tech_config', methods=['POST'])
-def save_tech_config():
-    """Saves the technical configuration."""
+@app.route('/save_mobile_config', methods=['POST'])
+def save_mobile_config():
+    """Saves the mobile device configuration."""
     config = load_config()
     
     config['device']['platform_version'] = request.form['platform_version']
@@ -140,8 +150,8 @@ def save_tech_config():
     config['tiktok']['app_activity'] = request.form['tiktok_app_activity']
     
     save_config(config)
-    logger.success("Technical configuration saved.")
-    return jsonify({"status": "success", "message": "技术配置已保存。"})
+    logger.success("Mobile configuration saved.")
+    return jsonify({"status": "success", "message": "手机设置已保存。"})
 
 @app.route('/api/link_files')
 def list_link_files():
