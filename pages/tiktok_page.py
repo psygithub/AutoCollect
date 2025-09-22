@@ -46,6 +46,8 @@ class TikTokPage:
         copy_link_btn_xpath='//android.widget.TextView[contains(@text,"复制链接")]'
         self.copy_link_option = (AppiumBy.XPATH, copy_link_btn_xpath)
 
+        video_back_xpath='//android.widget.ImageView[@content-desc="返回"]'
+        self.back_button = (AppiumBy.XPATH, video_back_xpath)
 
     def fetch_image_from_pc(self, pc_image_path):
         """从PC传输图片到手机设备"""
@@ -288,9 +290,9 @@ class TikTokPage:
         '//android.widget.FrameLayout[starts-with(@resource-id,"com.zhiliaoapp.musically:id/")]/android.widget.FrameLayout/android.widget.FrameLayout/com.lynx.tasm.behavior.ui.view.UIComponent')
         
         logger.info(f"找到 {len(elements)} 个元素")
-        # for el in elements:
-        #     print(el)  # 打印文本
-        #     print(el.get_attribute("resourceId"))  # 打印属性
+        for el in elements:
+            print(el)  # 打印文本
+            print(el.get_attribute("resourceId"))  # 打印属性
 
 
 
@@ -301,12 +303,12 @@ class TikTokPage:
                     break
                 
                 product_xpath = f"{base_xpath}[{i}]"
-                product = self.helper.find_element_safe((AppiumBy.XPATH, product_xpath), timeout=5)
+                logger.info(f"商品XPATH: {product_xpath}")   
+                product = self.helper.find_element_safe((AppiumBy.XPATH, product_xpath), timeout=10)
                 
                 if not product:
                     continue
-                logger.info(f"找到商品: {product}")  
-                logger.info(f"商品XPATH: {product_xpath}")        
+                logger.info(f"找到商品: {product}")       
                 try:
                     uid = (product.location['x'], product.location['y'], product.size['width'], product.size['height'])
                     if uid in processed_element_uids:
@@ -330,6 +332,9 @@ class TikTokPage:
                         
                         self.driver_manager.switch_to_app(config['tiktok']['app_package'])
                         self.go_back()
+                        # 判断是否在视频页
+                        if self.helper.find_element_safe(self.back_button, timeout=3):
+                            self.go_back()
 
                 except Exception as e:
                     logger.error(f"处理索引 {i} 的产品时出错: {e}")

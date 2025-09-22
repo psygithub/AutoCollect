@@ -87,10 +87,10 @@ def execute_automation(config):
         driver_manager.terminate_app(tiktok_package)
         driver_manager.press_home()
         driver_manager.switch_to_app(tiktok_package)
-        time.sleep(8)
+        time.sleep(4)
 
         # Initialize page objects and services
-        tiktok_page = TikTokPage(driver)
+        tiktok_page = TikTokPage(driver_manager)
         
         # Generate a unique filename with a timestamp for the current task
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -120,7 +120,7 @@ def execute_automation(config):
             raise Exception("图像搜索失败")
         
         logger.info("=== 步骤4: 收集并分享商品链接 ===")
-        shared_links = _collect_and_share_links_logic(driver, driver_manager, tiktok_page, share_service, config)
+        shared_links = tiktok_page.collect_and_share_links(share_service, config)
         
         logger.info("=== 步骤5: 验证结果 ===")
         if not shared_links:
