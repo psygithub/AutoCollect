@@ -39,12 +39,12 @@ def save_config(config_data):
         yaml.dump(config_data, f, allow_unicode=True)
 
 # --- Link Opener Task ---
-def run_link_opener_task_wrapper(filename):
-    """Wrapper to run the link opener task with a specific file."""
+def run_link_opener_task_wrapper(filename, config):
+    """Wrapper to run the link opener task with a specific file and configuration."""
     logger.info(f"Starting link opener task for file: {filename}...")
     try:
         # We run the async function in a new event loop
-        asyncio.run(open_links_from_file(filename))
+        asyncio.run(open_links_from_file(filename, config))
         logger.success(f"Link opener task for {filename} finished.")
     except Exception as e:
         logger.error(f"Link opener task for {filename} failed in wrapper: {e}")
@@ -79,6 +79,17 @@ def run_automation_task_wrapper(pc_image_path):
 def index():
     """Main page to display configuration and list of link files."""
     config = load_config()
+    
+    # Ensure web_automation key exists with default values to prevent Jinja errors
+    if 'web_automation' not in config:
+        config['web_automation'] = {
+            'proxy_server': '',
+            'miaoshou_url': '',
+            'miaoshou_username': '',
+            'miaoshou_password': '',
+            'extension_path': ''
+        }
+
     # Ensure the image path uses forward slashes for JavaScript compatibility
     if config.get('task', {}).get('pc_image_path'):
         config['task']['pc_image_path'] = config['task']['pc_image_path'].replace('\\', '/')
@@ -148,7 +159,25 @@ def save_task_config():
     
     save_config(config)
     logger.success("Task configuration saved.")
-    return jsonify({"status": "success", "message": "任务配置已保存。"})
+    return jsonify({"status": "success", "message": "APP自动化任务已保存。"})
+
+@app.route('/save_web_config', methods=['POST'])
+def save_web_config():
+    """Saves the web automation configuration."""
+    config = load_config()
+    
+    if 'web_automation' not in config:
+        config['web_automation'] = {}
+        
+    config['web_automation']['proxy_server'] = request.form['proxy_server']
+    config['web_automation']['miaoshou_url'] = request.form['miaoshou_url']
+    config['web_automation']['miaoshou_username'] = request.form['miaoshou_username']
+    config['web_automation']['miaoshou_password'] = request.form['miaoshou_password']
+    config['web_automation']['extension_path'] = request.form['extension_path']
+    
+    save_config(config)
+    logger.success("Web automation configuration saved.")
+    return jsonify({"status": "success", "message": "Web自动化配置已保存。"})
 
 @app.route('/save_mobile_config', methods=['POST'])
 def save_mobile_config():
@@ -162,7 +191,7 @@ def save_mobile_config():
     
     save_config(config)
     logger.success("Mobile configuration saved.")
-    return jsonify({"status": "success", "message": "手机设置已保存。"})
+    return jsonify({"status": "success", "message": "APP自动化配置已保存。"})
 
 @app.route('/api/link_files')
 def list_link_files():
@@ -189,8 +218,11 @@ def start_link_opener():
     if not filename:
         return jsonify({"status": "error", "message": "No filename provided."}), 400
 
+    config = load_config()
+    web_config = config.get('web_automation', {})
+
     logger.info(f"Received request to open links from file: {filename}")
-    task_thread = threading.Thread(target=run_link_opener_task_wrapper, args=(filename,))
+    task_thread = threading.Thread(target=run_link_opener_task_wrapper, args=(filename, web_config))
     task_thread.start()
     return jsonify({"status": "success", "message": f"正在后台打开文件 '{filename}' 中的链接..."})
 
