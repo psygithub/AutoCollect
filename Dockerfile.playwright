@@ -1,0 +1,49 @@
+# Dockerfile for running the web automation (Playwright) part of the application
+# This image is larger as it includes a full browser environment.
+
+# Use the official Playwright image which comes with browsers pre-installed
+FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the requirements file and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application code into the container
+COPY . .
+
+# --- Handling the Chrome Extension ---
+# 1. Create a directory for the extension
+RUN mkdir -p /app/extensions/
+
+# 2. Copy the local extension into the container's extension directory
+# IMPORTANT: The user MUST place their unpacked Chrome extension into the `extensions/`
+# directory in the project root on their host machine before building this image.
+COPY extensions/ /app/extensions/
+
+# The config.yaml used inside this container should have its `extension_path`
+# updated to point to `/app/extensions/`
+
+# Expose the port the app runs on (though this container is more for running the script)
+EXPOSE 8080
+
+# Set the default command to run the web server
+# This allows the same image to be used for triggering the task via the web UI
+CMD ["waitress-serve", "--host=0.0.0.0", "--port=8080", "app:app"]
+
+# --- Build and Run Instructions (for README) ---
+#
+# 1. Place your unpacked Chrome extension into an `extensions/` directory in the project root.
+#
+# 2. Build the Docker image:
+#    docker build -t autocollect-playwright -f Dockerfile.playwright .
+#
+# 3. Run the container:
+#    docker run --rm -it -p 8080:8080 \
+#      -v "$(pwd)/shared_links:/app/shared_links" \
+#      --shm-size=1g \
+#      autocollect-playwright
+#
+# Note on --shm-size=1g: This is recommended for Playwright/Chrome to avoid crashes in some environments.

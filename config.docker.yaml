@@ -1,0 +1,30 @@
+# Appium服务器配置 (Docker专用)
+appium:
+  server_url: "http://host.docker.internal:4723"
+
+# 设备配置
+device:
+  platform_name: "Android"
+  platform_version: "13"
+  device_name: "emulator-5554"
+  automation_name: "UiAutomator2"
+  no_reset: true
+  full_reset: false
+
+# TikTok应用配置
+tiktok:
+  app_package: "com.zhiliaoapp.musically"
+  app_activity: "com.ss.android.ugc.aweme.splash.SplashActivity"
+
+# 微信应用配置
+wechat:
+  app_package: "com.tencent.mm"
+  app_activity: ".ui.SplashUI"
+
+# 测试配置
+test:
+  implicit_wait: 3
+  screenshot_path: "./screenshots"
+  max_products_to_process: 2
+  contact_name: "文件传输助手"
+  share_target: "file"

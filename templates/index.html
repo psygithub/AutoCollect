@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动化采集配置</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 2em;
+            background-color: #f4f7f9;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 1.5em;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5em 2em;
+            margin-bottom: 2em;
+        }
+        .card h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 0.5em;
+            color: #34495e;
+        }
+        .form-group {
+            margin-bottom: 1.2em;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.8em;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            padding: 0.8em 1.5em;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 1em;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #3498db;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary {
+            background-color: #2ecc71;
+        }
+        .btn-secondary:hover {
+            background-color: #27ae60;
+        }
+        .btn-group {
+            display: inline-flex;
+            gap: 1em;
+        }
+        #status {
+            margin-top: 1em;
+            padding: 1em;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5em;
+        }
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>自动化采集配置</h1>
+
+
+        <!-- APP自动化 -->
+        <div class="card">
+            <h2>APP自动化</h2>
+            <div style="padding-top: 1.5em;">
+                <!-- APP自动化配置 -->
+                <details class="card">
+                    <summary>
+                        <h3 style="display: inline-block; margin: 0; border: none; padding: 0;">APP自动化配置</h3>
+                    </summary>
+                    <form id="mobile-config-form" style="margin-top: 1.5em;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="platform_version">安卓版本</label>
+                                <input type="text" id="platform_version" name="platform_version" value="{{ config.device.platform_version }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="device_name">设备名称 (UDID)</label>
+                                <input type="text" id="device_name" name="device_name" value="{{ config.device.device_name }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="tiktok_app_package">App Package</label>
+                                <input type="text" id="tiktok_app_package" name="tiktok_app_package" value="{{ config.tiktok.app_package }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="tiktok_app_activity">App Activity</label>
+                                <input type="text" id="tiktok_app_activity" name="tiktok_app_activity" value="{{ config.tiktok.app_activity }}">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">保存APP自动化配置</button>
+                        </div>
+                    </form>
+                </details>
+
+                <!-- APP自动化任务 -->
+                <div class="card">
+                    <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 0.5em;">APP自动化任务</h3>
+                    <form id="task-config-form">
+                        <div class="form-group">
+                            <label for="pc_image_path">采集产品图 (可选，放到uploads文件夹下)</label>
+                            <select id="pc_image_path" name="pc_image_path">
+                                <option value="">-- 不使用图片搜索 --</option>
+                            </select>
+                            <img id="image-preview" src="" alt="图片预览" style="max-width: 150px; margin-top: 1em; display: none; border-radius: 4px;">
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="max_products_to_process">采集数</label>
+                                <input type="number" id="max_products_to_process" name="max_products_to_process" value="{{ config.task.max_products_to_process }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="share_target">分享目标</label>
+                                <input type="text" id="share_target" name="share_target" value="{{ config.task.share_target }}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <div class="btn-group">
+                                <button type="submit" class="btn-primary">保存APP自动化任务</button>
+                                <button type="button" id="start-task-btn" class="btn-secondary">开始采集</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- WEB自动化 -->
+        <div class="card">
+            <h2>WEB自动化</h2>
+            <div style="padding-top: 1.5em;">
+                <!-- WEB自动化配置 -->
+                <details class="card">
+                    <summary>
+                        <h3 style="display: inline-block; margin: 0; border: none; padding: 0;">WEB自动化配置</h3>
+                    </summary>
+                    <form id="web-config-form" style="margin-top: 1.5em;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="proxy_server">代理服务器</label>
+                                <input type="text" id="proxy_server" name="proxy_server" value="{{ config.web_automation.proxy_server }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="miaoshou_url">秒手URL</label>
+                                <input type="text" id="miaoshou_url" name="miaoshou_url" value="{{ config.web_automation.miaoshou_url }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="miaoshou_username">秒手用户名</label>
+                                <input type="text" id="miaoshou_username" name="miaoshou_username" value="{{ config.web_automation.miaoshou_username }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="miaoshou_password">秒手密码</label>
+                                <input type="password" id="miaoshou_password" name="miaoshou_password" value="{{ config.web_automation.miaoshou_password }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="extension_path">插件路径 (使用 / )</label>
+                            <input type="text" id="extension_path" name="extension_path" value="{{ config.web_automation.extension_path }}">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">保存WEB自动化配置</button>
+                        </div>
+                    </form>
+                </details>
+
+                <!-- WEB自动化任务 -->
+                <div class="card">
+                    <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 0.5em;">WEB自动化任务</h3>
+                    <div class="form-group">
+                        <label for="link-file-select">采集的链接文件：</label>
+                        <div class="link-opener-group">
+                            <select id="link-file-select"></select>
+                            <div class="btn-group">
+                                <a href="/results" id="view-links-link" target="_blank"><button type="button" class="btn-secondary">查看链接</button></a>
+                                <button type="button" id="open-links-btn" class="btn-primary btn-orange">打开链接</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="status">状态: 空闲</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusDiv = document.getElementById('status');
+
+            // --- 图片选择与预览 ---
+            const imageSelect = document.getElementById('pc_image_path');
+            const imagePreview = document.getElementById('image-preview');
+            // The current image path is no longer loaded from the main config, 
+            // as it's now a dynamic selection.
+            let currentImagePath = ""; 
+
+            function updatePreview(imageName) {
+                if (imageName) {
+                    // Add a timestamp to the URL to bypass browser cache
+                    imagePreview.src = '/uploads/' + imageName + '?t=' + new Date().getTime();
+                    imagePreview.style.display = 'block';
+                } else {
+                    imagePreview.src = '';
+                    imagePreview.style.display = 'none';
+                }
+            }
+
+            imageSelect.addEventListener('change', () => updatePreview(imageSelect.value));
+
+            function fetchAndPopulateImages() {
+                const previouslySelected = imageSelect.value;
+                fetch('/api/images')
+                    .then(response => response.json())
+                    .then(images => {
+                        if (Array.isArray(images)) {
+                            // Clear existing options except the first one
+                            while (imageSelect.options.length > 1) {
+                                imageSelect.remove(1);
+                            }
+                            
+                            images.forEach(image => {
+                                const option = new Option(image, image);
+                                imageSelect.add(option);
+                            });
+
+                            // Try to re-select the previously selected image
+                            if (previouslySelected && images.includes(previouslySelected)) {
+                                imageSelect.value = previouslySelected;
+                            }
+                            
+                            // Update preview based on the final selection
+                            updatePreview(imageSelect.value);
+                        }
+                    })
+                    .catch(err => console.error("Failed to refresh images:", err));
+            }
+
+            // Initial fetch
+            fetchAndPopulateImages();
+
+            // Set up interval to refresh every 10 seconds
+            setInterval(fetchAndPopulateImages, 10000);
+
+            // --- 链接文件选择 ---
+            const linkFileSelect = document.getElementById('link-file-select');
+            const openLinksBtn = document.getElementById('open-links-btn');
+
+            function fetchAndPopulateLinkFiles() {
+                const previouslySelected = linkFileSelect.value;
+                fetch('/api/link_files')
+                    .then(response => response.json())
+                    .then(files => {
+                        // Clear existing options
+                        linkFileSelect.innerHTML = '';
+
+                        if (Array.isArray(files) && files.length > 0) {
+                            files.forEach(file => {
+                                const option = new Option(file, file);
+                                linkFileSelect.add(option);
+                            });
+                            // Re-select previous value if it still exists
+                            if (previouslySelected && files.includes(previouslySelected)) {
+                                linkFileSelect.value = previouslySelected;
+                            }
+                            linkFileSelect.disabled = false;
+                            openLinksBtn.disabled = false;
+                        } else {
+                            linkFileSelect.add(new Option("无可用链接文件", ""));
+                            linkFileSelect.disabled = true;
+                            openLinksBtn.disabled = true;
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Failed to refresh link files:", err);
+                        linkFileSelect.disabled = true;
+                        openLinksBtn.disabled = true;
+                    });
+            }
+
+            // Initial fetch
+            fetchAndPopulateLinkFiles();
+
+            // Set up interval to refresh every 10 seconds
+            setInterval(fetchAndPopulateLinkFiles, 10000);
+
+            // --- 表单提交 ---
+            const webConfigForm = document.getElementById('web-config-form');
+            webConfigForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                statusDiv.textContent = '正在保存WEB自动化配置...';
+                fetch('/save_web_config', { method: 'POST', body: new FormData(this) })
+                    .then(res => res.json()).then(data => statusDiv.textContent = `状态: ${data.message}`)
+                    .catch(err => statusDiv.textContent = '状态: 保存WEB自动化配置时出错。');
+            });
+
+            const mobileForm = document.getElementById('mobile-config-form');
+            mobileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                statusDiv.textContent = '正在保存APP自动化配置...';
+                fetch('/save_mobile_config', { method: 'POST', body: new FormData(this) })
+                    .then(res => res.json()).then(data => statusDiv.textContent = `状态: ${data.message}`)
+                    .catch(err => statusDiv.textContent = '状态: 保存APP自动化配置时出错。');
+            });
+
+            const taskForm = document.getElementById('task-config-form');
+            taskForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                statusDiv.textContent = '正在保存APP自动化任务...';
+                fetch('/save_task_config', { method: 'POST', body: new FormData(this) })
+                    .then(res => res.json()).then(data => statusDiv.textContent = `状态: ${data.message}`)
+                    .catch(err => statusDiv.textContent = '状态: 保存APP自动化任务时出错。');
+            });
+
+            // --- 任务按钮 ---
+            document.getElementById('start-task-btn').addEventListener('click', function() {
+                const selectedImage = imageSelect.value;
+                
+                // The image is optional, so we don't block if it's not selected.
+                // The backend will handle the case where it's needed but not provided.
+                
+                statusDiv.textContent = '正在启动采集任务...';
+                
+                fetch('/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pc_image_path: selectedImage
+                    })
+                })
+                .then(res => res.json())
+                .then(startData => {
+                    if (startData.status === 'error') {
+                        statusDiv.textContent = `状态: 错误 - ${startData.message}`;
+                    } else {
+                        statusDiv.textContent = `状态: ${startData.message}`;
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    statusDiv.textContent = '状态: 启动采集任务时出错。';
+                });
+            });
+
+            document.getElementById('open-links-btn').addEventListener('click', function() {
+                const selectedFile = linkFileSelect.value;
+                if (!selectedFile) {
+                    statusDiv.textContent = '状态: 请先选择一个链接文件。';
+                    return;
+                }
+                statusDiv.textContent = `状态: 正在启动浏览器打开 ${selectedFile}...`;
+                fetch('/open_links', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: selectedFile })
+                })
+                .then(res => res.json()).then(data => statusDiv.textContent = `状态: ${data.message}`)
+                .catch(err => statusDiv.textContent = '状态: 启动打开链接任务时出错。');
+            });
+        });
+    </script>
+    <style>
+        /* Additional styles for the new layout */
+        summary {
+            cursor: pointer;
+            outline: none;
+        }
+        summary h2 {
+            display: inline-block;
+            margin: 0;
+            border: none;
+        }
+        .link-opener-group {
+            display: flex;
+            gap: 1em;
+            align-items: center;
+        }
+        .link-opener-group select {
+            flex-grow: 1;
+        }
+        .link-opener-group .btn-group {
+            flex-shrink: 0;
+        }
+        .btn-orange {
+            background-color: #e67e22;
+        }
+        .btn-orange:hover {
+            background-color: #d35400;
+        }
+        .form-actions {
+            text-align: right;
+            margin-top: 1.5em;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,15 @@
+Appium-Python-Client==3.1.1
+selenium==4.15.2
+Pillow==10.1.0
+opencv-python==4.8.1.78
+numpy==1.24.3
+pytest==7.4.3
+allure-pytest==2.13.2
+loguru==0.7.2
+pyyaml==6.0.1
+requests
+pyperclip
+Flask==2.2.2
+Werkzeug==2.3.8
+waitress==2.1.2
+playwright==1.40.0

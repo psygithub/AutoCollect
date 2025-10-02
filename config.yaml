@@ -1,0 +1,22 @@
+appium:
+  server_url: http://127.0.0.1:4723
+device:
+  automation_name: UiAutomator2
+  device_name: RFCR70SBAQA
+  full_reset: false
+  no_reset: true
+  platform_name: Android
+  platform_version: '13'
+task:
+  contact_name: 文件传输助手
+  implicit_wait: 3
+  max_products_to_process: 2
+  pc_image_path: D:\projects\AutoCollect\uploads\EEA05-A006-150-WH1-001.jpg
+  screenshot_path: ./screenshots
+  share_target: file
+tiktok:
+  app_activity: com.ss.android.ugc.aweme.splash.SplashActivity
+  app_package: com.zhiliaoapp.musically
+wechat:
+  app_activity: .ui.SplashUI
+  app_package: com.tencent.mm
