@@ -46,6 +46,11 @@ AutoCollect/
 - 已连接的Android设备或模拟器，并开启USB调试。
 - 设备上已安装TikTok应用。
 
+## 提前工作
+- pyenv local 3.11.6 : 指定python版本
+- python -m venv ./venv : 创建虚拟环境，管理依赖包版本 
+- 关闭并重新打开终端
+
 ## 架构与运行模式
 
 本项目包含三个核心组件，可以根据需求选择不同的运行方式：
